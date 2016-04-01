@@ -11,7 +11,7 @@ int motorPWMPin = 12;
 int blinkingLEDPin = 13;
 int motorPower = 15;
 int numberOfLoops = 0;
-double VELOCITY = 0.595;
+double VELOCITY = 0.595;//0.495;
 L3G4200D gyro;
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
@@ -28,13 +28,11 @@ void setup() {
         while(1);
     }
     gyro.enableDefault();
-    
+    delay(10000);
+    circles(1,2);
 }
 
 void loop() {
-    delay(10000);
-    circles(2,1);
-    exit(0);
 }
 
 void circles(double radius1, double radius2){
@@ -44,12 +42,11 @@ void circles(double radius1, double radius2){
 }
 void fullCirclecw(double radius)
 {
-    L3G4200D gyro;
     double startPoint = getHeading();  //this gets our initial value with the compass
     double angVel = -(VELOCITY/radius)*(180/PI); //defines our angular velocity for the circle
     int carAngle = 100;
     double feedAngVel = 0;
-    int delay1 = 20;
+    int delay1 = 50;
     double degreesSoFar = 0;
     // we need to define carAngle to an approximate value
     writeCarServo(carAngle);
@@ -57,7 +54,6 @@ void fullCirclecw(double radius)
     // Serial.print(angVel);    Serial.println(" : our angVel");
     delay(5000);
     analogWrite(motorPWMPin, motorPower);
-    delay(2000);
     
     Serial.println("right before loops");
     while(1)//
@@ -65,7 +61,7 @@ void fullCirclecw(double radius)
         delay(delay1);
         gyro.read();
         feedAngVel = (gyro.g.z)*(8.75/1000); //reading angular velocity
-        degreesSoFar += feedAngVel*delay1/1000;
+        degreesSoFar += feedAngVel*(delay1)/1000;
         Serial.print(degreesSoFar);    Serial.println(" : dso");
         
         if(degreesSoFar <= -360){
@@ -96,20 +92,18 @@ void fullCirclecw(double radius)
 }
 void fullCircleccw(double radius)
 {
-    L3G4200D gyro;
     double startPoint = getHeading();  //this gets our initial value with the compass
-    double angVel = -(VELOCITY/radius)*(180/PI); //defines our angular velocity for the circle
-    int carAngle = 100;
+    double angVel = (VELOCITY/radius)*(180/PI); //defines our angular velocity for the circle
+    int carAngle = 80;
     double feedAngVel = 0;
-    int delay1 = 20;
+    int delay1 = 50;
     double degreesSoFar = 0;
     // we need to define carAngle to an approximate value
     writeCarServo(carAngle);
     //using radius here it doesnt have to be exact, you know why.
     // Serial.print(angVel);    Serial.println(" : our angVel");
-    delay(5000);
+    delay(1000);
     analogWrite(motorPWMPin, motorPower);
-    delay(2000);
     
     Serial.println("right before loops");
     while(1)//
@@ -119,14 +113,13 @@ void fullCircleccw(double radius)
         feedAngVel = (gyro.g.z)*(8.75/1000); //reading angular velocity
         degreesSoFar += feedAngVel*delay1/1000;
         Serial.print(degreesSoFar);    Serial.println(" : dso");
-        
-        if(degreesSoFar <= -360){
+        if(degreesSoFar >= 360){
             break;
         }
-        if (feedAngVel < angVel) //if the angular velocity is too high adjust
+        if (feedAngVel<angVel) //if the angular velocity is too high adjust
         { //honestly just run the car with these and see which way it needs to be adjusted
-            //too sharp cw
-            if(carAngle > 90)
+            //too not sharp ccw
+            if(carAngle > 15)
             {
                 carAngle--;
                 writeCarServo(carAngle);
@@ -134,7 +127,7 @@ void fullCircleccw(double radius)
         }
         else if (feedAngVel > angVel) //if the angular velocity is too low adjust
         {
-            if(carAngle < 165)
+            if(carAngle < 90)
             {
                 carAngle++;
                 writeCarServo(carAngle);
